@@ -9,21 +9,28 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
+/* MAIN BACKGROUND */
+
 .stApp {
-    background-color: #F8FAFC;
+
+    background:
+    linear-gradient(
+        rgba(248,250,252,0.92),
+        rgba(248,250,252,0.92)
+    ),
+    url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3");
+
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+
     color: #111827;
 }
 
-/* Hide Streamlit UI */
+/* REMOVE STREAMLIT DEFAULTS */
 
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
+#MainMenu,
+footer,
 header {
     visibility: hidden;
 }
@@ -33,52 +40,80 @@ header {
 ========================= */
 
 .navbar {
-    background: linear-gradient(
-        90deg,
-        #4F46E5,
-        #06B6D4
-    );
-    padding: 18px 30px;
-    border-radius: 18px;
-    margin-bottom: 30px;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
+
+    padding: 10px 5px 20px 5px;
+
+    margin-bottom: 10px;
 }
 
 .nav-left {
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+
+    color: #111827;
+
+    font-size: 34px;
+
+    font-weight: 800;
+
+    letter-spacing: -1px;
 }
 
 /* =========================
-   RADIO NAVIGATION
+   REMOVE EMPTY BAR
+========================= */
+
+.stRadio > label {
+    display: none;
+}
+
+/* =========================
+   TOP NAVIGATION
 ========================= */
 
 div[role="radiogroup"] {
+
     display: flex;
-    gap: 16px;
-    margin-bottom: 30px;
+
+    gap: 14px;
+
+    margin-top: -10px;
+
+    margin-bottom: 35px;
 }
 
 .stRadio > div {
     flex-direction: row;
 }
 
+/* NAV BUTTONS */
+
 .stRadio label {
-    background: white;
+
+    background: rgba(255,255,255,0.8);
+
+    backdrop-filter: blur(10px);
+
     padding: 12px 24px;
-    border-radius: 12px;
-    border: 1px solid #E5E7EB;
+
+    border-radius: 14px;
+
+    border: 1px solid rgba(255,255,255,0.4);
+
     font-size: 15px;
+
     font-weight: 600;
+
     color: #111827 !important;
+
     transition: 0.2s ease;
+
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
 }
 
 .stRadio label:hover {
+
+    transform: translateY(-2px);
+
     border-color: #4F46E5;
-    color: #4F46E5 !important;
 }
 
 /* =========================
@@ -86,13 +121,20 @@ div[role="radiogroup"] {
 ========================= */
 
 h1 {
+
     color: #111827 !important;
-    font-size: 42px !important;
+
+    font-size: 56px !important;
+
     font-weight: 800 !important;
+
+    line-height: 1.1;
 }
 
 h2, h3 {
+
     color: #111827 !important;
+
     font-weight: 700 !important;
 }
 
@@ -100,8 +142,11 @@ h2, h3 {
    TEXT
 ========================= */
 
-p, li, label, span {
-    color: #374151 !important;
+p, li, span {
+
+    color: #4B5563 !important;
+
+    font-size: 16px;
 }
 
 /* =========================
@@ -109,42 +154,47 @@ p, li, label, span {
 ========================= */
 
 .metric-card {
-    background: white;
-    border-radius: 18px;
-    padding: 24px;
-    border: 1px solid #E5E7EB;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
-    transition: 0.2s ease;
+
+    background: rgba(255,255,255,0.82);
+
+    backdrop-filter: blur(14px);
+
+    border-radius: 20px;
+
+    padding: 28px;
+
+    border: 1px solid rgba(255,255,255,0.4);
+
+    box-shadow: 0px 8px 24px rgba(0,0,0,0.06);
+
+    transition: 0.25s ease;
 }
 
 .metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0px 10px 24px rgba(0,0,0,0.08);
+
+    transform: translateY(-4px);
+
+    box-shadow: 0px 14px 32px rgba(0,0,0,0.08);
 }
 
 .metric-title {
-    font-size: 14px;
+
+    font-size: 15px;
+
     color: #6B7280 !important;
-    margin-bottom: 10px;
+
+    margin-bottom: 12px;
+
     font-weight: 600;
 }
 
 .metric-value {
-    font-size: 34px;
+
+    font-size: 38px;
+
     color: #111827 !important;
+
     font-weight: 800;
-}
-
-/* =========================
-   STREAMLIT METRICS
-========================= */
-
-[data-testid="metric-container"] {
-    background: white;
-    border-radius: 18px;
-    padding: 18px;
-    border: 1px solid #E5E7EB;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
 }
 
 /* =========================
@@ -153,46 +203,75 @@ p, li, label, span {
 
 .stButton > button,
 .stDownloadButton > button {
+
     background: linear-gradient(
         90deg,
         #4F46E5,
         #06B6D4
     );
+
     color: white !important;
+
     border: none;
-    border-radius: 12px;
-    padding: 12px 22px;
+
+    border-radius: 14px;
+
+    padding: 12px 24px;
+
     font-size: 15px;
+
     font-weight: 600;
+
     transition: 0.2s ease;
 }
 
 .stButton > button:hover,
 .stDownloadButton > button:hover {
+
     transform: translateY(-2px);
-    box-shadow: 0px 6px 14px rgba(79,70,229,0.25);
+
+    box-shadow: 0px 8px 20px rgba(79,70,229,0.25);
 }
 
 /* =========================
-   FILE UPLOADER
+   UPLOAD SECTION
 ========================= */
 
 [data-testid="stFileUploader"] {
-    background: white;
-    border-radius: 18px;
+
+    background: rgba(255,255,255,0.82) !important;
+
+    backdrop-filter: blur(10px);
+
+    border-radius: 20px;
+
     border: 2px dashed #4F46E5;
-    padding: 18px;
+
+    padding: 22px;
+}
+
+/* UPLOAD TEXT */
+
+[data-testid="stFileUploader"] * {
+
+    color: #111827 !important;
+
+    font-weight: 500 !important;
 }
 
 /* =========================
-   DATAFRAME
+   TABLES
 ========================= */
 
 [data-testid="stDataFrame"] {
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #E5E7EB;
-    padding: 10px;
+
+    background: rgba(255,255,255,0.85);
+
+    border-radius: 18px;
+
+    padding: 12px;
+
+    border: 1px solid rgba(255,255,255,0.5);
 }
 
 /* =========================
@@ -200,8 +279,12 @@ p, li, label, span {
 ========================= */
 
 .stAlert {
-    border-radius: 14px;
+
+    border-radius: 16px;
+
     border: none;
+
+    backdrop-filter: blur(8px);
 }
 
 /* =========================
@@ -209,11 +292,20 @@ p, li, label, span {
 ========================= */
 
 .element-container:has(.js-plotly-plot) {
-    background: white;
-    border-radius: 18px;
+
+    background: rgba(255,255,255,0.82);
+
+    backdrop-filter: blur(14px);
+
+    border-radius: 22px;
+
     padding: 18px;
-    border: 1px solid #E5E7EB;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+
+    border: 1px solid rgba(255,255,255,0.5);
+
+    box-shadow: 0px 8px 24px rgba(0,0,0,0.06);
+
+    margin-bottom: 24px;
 }
 
 /* =========================
@@ -223,25 +315,22 @@ p, li, label, span {
 .stTextInput input,
 .stSelectbox div,
 .stDateInput div {
+
     border-radius: 12px !important;
 }
 
 /* =========================
-   SIDEBAR REMOVE
-========================= */
-
-section[data-testid="stSidebar"] {
-    display: none;
-}
-
-/* =========================
-   PAGE PADDING
+   PAGE SPACING
 ========================= */
 
 .block-container {
-    padding-top: 2rem;
-    padding-left: 3rem;
-    padding-right: 3rem;
+
+    padding-top: 1.5rem;
+
+    padding-left: 4rem;
+
+    padding-right: 4rem;
+
     padding-bottom: 2rem;
 }
 
