@@ -9,7 +9,7 @@ from styles import CUSTOM_CSS
 # =========================
 
 st.set_page_config(
-    page_title="GridPulse",
+    page_title="Electra AI",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -28,7 +28,7 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.markdown("""
 <div class="navbar">
     <div class="nav-left">
-        ⚡ <span>GridPulse</span>
+        ⚡ <span>Electra AI</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
