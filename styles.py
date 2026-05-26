@@ -2,16 +2,19 @@ CUSTOM_CSS = """
 <style>
 
 /* =========================
-   MAIN APP
+   GLOBAL
 ========================= */
 
-.stApp {
-    background-color: #f5f7fb;
-    color: #111827;
-    font-family: 'Segoe UI', sans-serif;
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
 }
 
-/* REMOVE STREAMLIT DEFAULT MENU */
+.stApp {
+    background-color: #F8FAFC;
+    color: #111827;
+}
+
+/* Hide Streamlit UI */
 
 #MainMenu {
     visibility: hidden;
@@ -30,61 +33,33 @@ header {
 ========================= */
 
 .navbar {
-    width: 100%;
-    padding: 20px 35px;
-    border-radius: 22px;
     background: linear-gradient(
         90deg,
-        #4f46e5,
-        #7c3aed
+        #4F46E5,
+        #06B6D4
     );
-    margin-bottom: 25px;
-    box-shadow: 0px 8px 25px rgba(0,0,0,0.12);
+    padding: 18px 30px;
+    border-radius: 18px;
+    margin-bottom: 30px;
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
 }
 
 .nav-left {
     color: white;
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 /* =========================
-   PAGE TITLES
-========================= */
-
-h1 {
-    color: #111827;
-    font-size: 42px !important;
-    font-weight: 800;
-}
-
-h2, h3 {
-    color: #1f2937;
-    font-weight: 700;
-}
-
-/* =========================
-   CAPTION
-========================= */
-
-.caption {
-    color: #6b7280;
-    font-size: 16px;
-}
-
-/* =========================
-   HORIZONTAL RADIO MENU
+   RADIO NAVIGATION
 ========================= */
 
 div[role="radiogroup"] {
     display: flex;
-    justify-content: center;
-    gap: 18px;
-    margin-bottom: 25px;
+    gap: 16px;
+    margin-bottom: 30px;
 }
-
-/* RADIO BUTTONS */
 
 .stRadio > div {
     flex-direction: row;
@@ -92,19 +67,41 @@ div[role="radiogroup"] {
 
 .stRadio label {
     background: white;
-    padding: 12px 28px;
-    border-radius: 14px;
-    border: 2px solid #e5e7eb;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    font-size: 15px;
     font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0px 2px 8px rgba(0,0,0,0.04);
+    color: #111827 !important;
+    transition: 0.2s ease;
 }
 
 .stRadio label:hover {
-    border-color: #6366f1;
-    color: #6366f1;
-    transform: translateY(-2px);
+    border-color: #4F46E5;
+    color: #4F46E5 !important;
+}
+
+/* =========================
+   TITLES
+========================= */
+
+h1 {
+    color: #111827 !important;
+    font-size: 42px !important;
+    font-weight: 800 !important;
+}
+
+h2, h3 {
+    color: #111827 !important;
+    font-weight: 700 !important;
+}
+
+/* =========================
+   TEXT
+========================= */
+
+p, li, label, span {
+    color: #374151 !important;
 }
 
 /* =========================
@@ -113,29 +110,29 @@ div[role="radiogroup"] {
 
 .metric-card {
     background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
-    transition: 0.3s ease;
-    border-left: 8px solid #6366f1;
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
 }
 
 .metric-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0px 10px 24px rgba(0,0,0,0.08);
 }
 
 .metric-title {
-    font-size: 16px;
-    color: #6b7280;
+    font-size: 14px;
+    color: #6B7280 !important;
     margin-bottom: 10px;
     font-weight: 600;
 }
 
 .metric-value {
     font-size: 34px;
+    color: #111827 !important;
     font-weight: 800;
-    color: #111827;
 }
 
 /* =========================
@@ -145,57 +142,35 @@ div[role="radiogroup"] {
 [data-testid="metric-container"] {
     background: white;
     border-radius: 18px;
-    padding: 20px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
-    border-left: 6px solid #6366f1;
+    padding: 18px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
 }
 
 /* =========================
    BUTTONS
 ========================= */
 
-.stButton > button {
-    background: linear-gradient(
-        90deg,
-        #6366f1,
-        #8b5cf6
-    );
-    color: white;
-    border: none;
-    border-radius: 14px;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 700;
-    transition: 0.3s ease;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0px 6px 15px rgba(99,102,241,0.3);
-}
-
-/* =========================
-   DOWNLOAD BUTTON
-========================= */
-
+.stButton > button,
 .stDownloadButton > button {
     background: linear-gradient(
         90deg,
-        #06b6d4,
-        #3b82f6
+        #4F46E5,
+        #06B6D4
     );
-    color: white;
-    border-radius: 14px;
+    color: white !important;
     border: none;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 700;
-    transition: 0.3s ease;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: 0.2s ease;
 }
 
+.stButton > button:hover,
 .stDownloadButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0px 6px 15px rgba(59,130,246,0.3);
+    box-shadow: 0px 6px 14px rgba(79,70,229,0.25);
 }
 
 /* =========================
@@ -205,9 +180,8 @@ div[role="radiogroup"] {
 [data-testid="stFileUploader"] {
     background: white;
     border-radius: 18px;
+    border: 2px dashed #4F46E5;
     padding: 18px;
-    border: 2px dashed #6366f1;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
 }
 
 /* =========================
@@ -216,65 +190,44 @@ div[role="radiogroup"] {
 
 [data-testid="stDataFrame"] {
     background: white;
-    border-radius: 18px;
-    padding: 12px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    border: 1px solid #E5E7EB;
+    padding: 10px;
 }
 
 /* =========================
-   ALERT BOXES
+   ALERTS
 ========================= */
 
 .stAlert {
-    border-radius: 16px;
+    border-radius: 14px;
     border: none;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.05);
 }
 
 /* =========================
-   PLOTLY CHART CONTAINER
+   CHARTS
 ========================= */
 
 .element-container:has(.js-plotly-plot) {
     background: white;
-    border-radius: 22px;
+    border-radius: 18px;
     padding: 18px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
-    margin-bottom: 25px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
 }
 
 /* =========================
-   INPUT FIELDS
+   INPUTS
 ========================= */
 
-.stTextInput > div > div > input {
-    border-radius: 14px;
-    border: 2px solid #e5e7eb;
-    padding: 10px;
-}
-
-.stTextInput > div > div > input:focus {
-    border-color: #6366f1;
+.stTextInput input,
+.stSelectbox div,
+.stDateInput div {
+    border-radius: 12px !important;
 }
 
 /* =========================
-   SELECT BOX
-========================= */
-
-.stSelectbox > div > div {
-    border-radius: 14px;
-}
-
-/* =========================
-   DATE INPUT
-========================= */
-
-.stDateInput > div {
-    border-radius: 14px;
-}
-
-/* =========================
-   SIDEBAR HIDE
+   SIDEBAR REMOVE
 ========================= */
 
 section[data-testid="stSidebar"] {
@@ -282,35 +235,14 @@ section[data-testid="stSidebar"] {
 }
 
 /* =========================
-   SECTIONS
+   PAGE PADDING
 ========================= */
 
 .block-container {
     padding-top: 2rem;
-    padding-bottom: 2rem;
     padding-left: 3rem;
     padding-right: 3rem;
-}
-
-/* =========================
-   SCROLLBAR
-========================= */
-
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c4b5fd;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #8b5cf6;
+    padding-bottom: 2rem;
 }
 
 </style>
