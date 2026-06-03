@@ -1,291 +1,166 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 from prophet import Prophet
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+def validate_cspdcl_schema(df):
+    """
+    Acts as a security filter. Checks the uploaded DataFrame for format errors,
+    missing information, or impossible electrical readings before running ML.
+    """
+    is_valid = True
+    error_messages = []
+    
+    # Check 1: Do the exact columns exist?
+    required_columns = ["Feeder_ID", "DTR_ID", "Consumer_No", "Date", "Consumption_kWh"]
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    
+    if missing_columns:
+        is_valid = False
+        error_messages.append(f"Missing required columns: {missing_columns}. Please check your column headers.")
+        return is_valid, error_messages 
+        
+    # Check 2: Are there blank or empty cells (NaNs)?
+    total_nulls = df[required_columns].isnull().sum().sum()
+    if total_nulls > 0:
+        is_valid = False
+        error_messages.append(f"Dataset contains {total_nulls} blank or missing values. Clean the data before uploading.")
+        
+    # Check 3: Are there negative numbers in consumption? 
+    negative_values = (df["Consumption_kWh"] < 0).sum()
+    if negative_values > 0:
+        is_valid = False
+        error_messages.append(f"Data Entry Error: Found {negative_values} rows with negative consumption values. This is physically impossible.")
+        
+    # Check 4: Is the consumption column actually full of numbers?
+    if not pd.api.types.is_numeric_dtype(df["Consumption_kWh"]):
+        is_valid = False
+        error_messages.append("Data Type Error: The 'Consumption_kWh' column must contain purely numbers, not text or characters.")
+        
+    return is_valid, error_messages
+
+
+@st.cache_data
+def load_forecast_data(uploaded_file):
+    df = pd.read_csv(uploaded_file)
+    df["Date"] = pd.to_datetime(df["Date"])
+    return df.sort_values("Date")
 
 def run_forecasting():
+    st.header("📈 CSPDCL Smart Power Demand Forecasting")
 
-    st.header("📈 Smart Power Demand Forecasting")
+    uploaded_file = st.file_uploader("Upload Master Grid Dataset for Forecasting", type=["csv", "xlsx"])
 
-    # =========================
-    # FILE UPLOAD
-    # =========================
-
-    uploaded_file = st.file_uploader(
-        "Upload Demand Dataset",
-        type=["csv", "xlsx"]
-    )
-
-    # REQUIRE FILE
     if uploaded_file is None:
-        st.info("📂 Please upload a demand dataset.")
+        st.info("📂 Please upload the compiled grid distribution dataset.")
         return
 
-    # READ FILE
-    if uploaded_file.name.endswith(".csv"):
-        df = pd.read_csv(uploaded_file)
+    # --- DEFENSIVE ENTERPRISE GATEWAY START (Indentation Fixed) ---
+    try:
+        # Load the file using our cached function
+        df = load_forecast_data(uploaded_file)
+        
+        # Pass the data to our security guard function
+        is_valid, error_list = validate_cspdcl_schema(df)
+        
+        # If the security guard finds bugs, display them nicely and STOP execution
+        if not is_valid:
+            for error in error_list:
+                st.error(f"❌ Dataset Validation Failed: {error}")
+            return 
+            
+    except Exception as e:
+        # If the file is completely broken or corrupt, catch the crash here
+        st.error(f"💥 Critical File Corruption: Could not parse this file. Technical reason: {str(e)}")
+        return
+    # --- DEFENSIVE ENTERPRISE GATEWAY END ---
+
+    # --- FRONTEND OVERHAUL: MAIN-PAGE FILTERS ---
+    st.markdown("### 🌐 Distribution Grid Scope Selection")
+    
+    # Create two columns side-by-side for a clean web layout
+    filter_col1, filter_col2 = st.columns(2)
+    
+    with filter_col1:
+        selected_feeder = st.selectbox("Select Target Feeder Line", df["Feeder_ID"].unique())
+    
+    # Filter dataset based on the chosen feeder first
+    filtered_df = df[df["Feeder_ID"] == selected_feeder]
+    
+    with filter_col2:
+        selected_dtr = st.selectbox("Select Distribution Transformer (DTR)", ["Aggregate Feeder Demand"] + list(filtered_df["DTR_ID"].unique()))
+
+    # Aggregate data based on selection
+    if selected_dtr == "Aggregate Feeder Demand":
+        forecast_target = filtered_df.groupby("Date")["Consumption_kWh"].sum().reset_index()
+        scope_title = selected_feeder
     else:
-        df = pd.read_excel(uploaded_file)
+        forecast_target = filtered_df[filtered_df["DTR_ID"] == selected_dtr].groupby("Date")["Consumption_kWh"].sum().reset_index()
+        scope_title = selected_dtr
 
-    # =========================
-    # VALIDATE DATA
-    # =========================
+    forecast_target.columns = ["ds", "y"]
 
-    if "Date" not in df.columns or "Demand_MW" not in df.columns:
-
-        st.error(
-            "Dataset must contain Date and Demand_MW columns"
-        )
-
+    if len(forecast_target) < 30:
+        st.error("At least 30 distinct dates are required to establish a time-series forecast.")
         return
 
-    # =========================
-    # PROCESS DATA
-    # =========================
+    # --- TRAIN / TEST SPLIT MANAGEMENT (80/20) ---
+    train_size = int(len(forecast_target) * 0.8)
+    train_df = forecast_target.iloc[:train_size]
+    test_df = forecast_target.iloc[train_size:].copy()
 
-    df["Date"] = pd.to_datetime(df["Date"])
+    # Fit Model on Training Split
+    m_eval = Prophet(yearly_seasonality=False, daily_seasonality=False)
+    m_eval.fit(train_df)
+    
+    # Predict over the Test Set horizon
+    future_test = test_df[['ds']].copy()
+    forecast_test = m_eval.predict(future_test)
 
-    df = df.sort_values("Date")
+    # Compute Core Mathematical Validation Metrics
+    mae = mean_absolute_error(test_df["y"], forecast_test["yhat"])
+    rmse = np.sqrt(mean_squared_error(test_df["y"], forecast_test["yhat"]))
+    mape = np.mean(np.abs((test_df["y"].values - forecast_test["yhat"].values) / test_df["y"].values)) * 100
 
-    # =========================
-    # SIDEBAR FILTERS
-    # =========================
+    # PUSH METRICS TO GLOBAL SESSION STATE FOR EVALUATION MODULE
+    st.session_state["metrics_available"] = True
+    st.session_state["eval_test_df"] = test_df
+    st.session_state["eval_forecast_test"] = forecast_test
+    st.session_state["mae"] = mae
+    st.session_state["rmse"] = rmse
+    st.session_state["mape"] = mape
+    st.session_state["scope_title"] = scope_title
 
-    st.sidebar.subheader("📅 Filter Data")
+    # --- FULL MODEL FOR FUTURE FORECASTING ---
+    final_model = Prophet(yearly_seasonality=False, daily_seasonality=False)
+    final_model.fit(forecast_target)
+    future_dates = final_model.make_future_dataframe(periods=7)
+    forecast_future = final_model.predict(future_dates)
 
-    start_date = st.sidebar.date_input(
-        "Start Date",
-        df["Date"].min()
-    )
+    # Upgraded Metrics Display Card
+    st.markdown(f"### 📊 Demand Analytics & 7-Day Outlook: {scope_title}")
+    with st.container(border=True):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("<p style='color:#64748b; font-weight:600; font-size:12px; margin-bottom:-5px; letter-spacing:0.5px;'>CURRENT GRID LOAD</p>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#0f172a; font-weight:800; font-size:36px; margin-top:0;'>{forecast_target['y'].iloc[-1]:,.1f} <span style='font-size:16px; font-weight:500; color:#64748b;'>kWh</span></h2>", unsafe_allow_html=True)
+        with c2:
+            st.markdown("<p style='color:#64748b; font-weight:600; font-size:12px; margin-bottom:-5px; letter-spacing:0.5px;'>HISTORICAL AVERAGE LOAD</p>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#0f172a; font-weight:800; font-size:36px; margin-top:0;'>{forecast_target['y'].mean():,.1f} <span style='font-size:16px; font-weight:500; color:#64748b;'>kWh</span></h2>", unsafe_allow_html=True)
+        with c3:
+            st.markdown("<p style='color:#4f46e5; font-weight:700; font-size:12px; margin-bottom:-5px; letter-spacing:0.5px;'>🤖 PROJECTED NEXT-DAY LOAD</p>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#4f46e5; font-weight:800; font-size:36px; margin-top:0;'>{forecast_future['yhat'].iloc[-7]:,.1f} <span style='font-size:16px; font-weight:500; color:#4f46e5;'>kWh</span></h2>", unsafe_allow_html=True)
 
-    end_date = st.sidebar.date_input(
-        "End Date",
-        df["Date"].max()
-    )
+    # Main Plotly Line Chart
+    fig = px.line(forecast_target, x="ds", y="y", title=f"Historical Load Profile vs. AI Outlook")
+    fig.add_scatter(x=forecast_future["ds"].tail(7), y=forecast_future["yhat"].tail(7), mode="lines+markers", name="7-Day AI Forecast")
+    fig.update_layout(template="plotly_dark", xaxis_title="Timeline", yaxis_title="Consumption (kWh)")
+    st.plotly_chart(fig, use_container_width=True)
 
-    df = df[
-        (df["Date"] >= pd.to_datetime(start_date)) &
-        (df["Date"] <= pd.to_datetime(end_date))
-    ]
-
-    # =========================
-    # KPI CARDS
-    # =========================
-
-    st.subheader("⚡ Demand Analytics")
-
-    current_demand = df["Demand_MW"].iloc[-1]
-
-    average_demand = df["Demand_MW"].mean()
-
-    peak_demand = df["Demand_MW"].max()
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-
-        st.metric(
-            "Current Demand",
-            f"{current_demand:.2f} MW"
-        )
-
-    with col2:
-
-        st.metric(
-            "Average Demand",
-            f"{average_demand:.2f} MW"
-        )
-
-    with col3:
-
-        st.metric(
-            "Peak Demand",
-            f"{peak_demand:.2f} MW"
-        )
-
-    st.markdown("---")
-
-    # =========================
-    # DEMAND TREND CHART
-    # =========================
-
-    st.subheader("📊 Demand Trend Analysis")
-
-    fig = px.line(
-        df,
-        x="Date",
-        y="Demand_MW",
-        title="Power Demand Over Time"
-    )
-
-    fig.update_traces(
-        line=dict(width=4)
-    )
-
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="#0f172a",
-        plot_bgcolor="#0f172a",
-        font=dict(color="white"),
-        title_font_size=22,
-        height=500
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-    # =========================
-    # PREPARE DATA FOR PROPHET
-    # =========================
-
-    prophet_df = df.rename(
-        columns={
-            "Date": "ds",
-            "Demand_MW": "y"
-        }
-    )
-
-    # =========================
-    # TRAIN PROPHET MODEL
-    # =========================
-
-    model = Prophet()
-
-    model.fit(prophet_df)
-
-    # =========================
-    # CREATE FUTURE DATES
-    # =========================
-
-    future = model.make_future_dataframe(
-        periods=7
-    )
-
-    # =========================
-    # GENERATE FORECAST
-    # =========================
-
-    forecast = model.predict(future)
-
-    # =========================
-    # EXTRACT FORECAST DATA
-    # =========================
-
-    forecast_df = forecast[
-        ["ds", "yhat"]
-    ].tail(7)
-
-    forecast_df.columns = [
-        "Date",
-        "Predicted_Demand_MW"
-    ]
-
-    # =========================
-    # FORECAST TABLE
-    # =========================
-
-    st.subheader("🔮 7-Day AI Forecast")
-
-    st.dataframe(
-        forecast_df,
-        use_container_width=True
-    )
-
-    # =========================
-    # FORECAST VISUALIZATION
-    # =========================
-
-    fig2 = px.line(
-        df,
-        x="Date",
-        y="Demand_MW",
-        title="Forecast Visualization"
-    )
-
-    fig2.add_scatter(
-        x=forecast_df["Date"],
-        y=forecast_df["Predicted_Demand_MW"],
-        mode="lines+markers",
-        name="AI Forecast",
-        line=dict(width=4)
-    )
-
-    fig2.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="#0f172a",
-        plot_bgcolor="#0f172a",
-        font=dict(color="white"),
-        title_font_size=22,
-        height=500
-    )
-
-    st.plotly_chart(
-        fig2,
-        use_container_width=True
-    )
-
-    # =========================
-    # FORECAST COMPONENTS
-    # =========================
-
-    st.subheader("📈 Forecast Components")
-
-    fig3 = model.plot_components(
-        forecast
-    )
-
-    st.pyplot(fig3)
-
-    # =========================
-    # AI INSIGHTS
-    # =========================
-
-    st.subheader("🤖 AI Energy Insights")
-
-    demand_growth = (
-        (
-            df["Demand_MW"].iloc[-1]
-            - df["Demand_MW"].iloc[0]
-        )
-        / df["Demand_MW"].iloc[0]
-    ) * 100
-
-    forecast_avg = forecast_df[
-        "Predicted_Demand_MW"
-    ].mean()
-
-    if demand_growth > 0:
-
-        st.success(
-            f"Energy demand increased by "
-            f"{demand_growth:.2f}% during "
-            f"the selected period."
-        )
-
-    else:
-
-        st.warning(
-            f"Energy demand decreased by "
-            f"{abs(demand_growth):.2f}% "
-            f"during the selected period."
-        )
-
-    st.info(
-        f"Predicted average demand for "
-        f"next 7 days: "
-        f"{forecast_avg:.2f} MW"
-    )
-
-    # =========================
-    # DOWNLOAD RESULTS
-    # =========================
-
-    st.download_button(
-        "⬇ Download Forecast Results",
-        forecast_df.to_csv(index=False),
-        file_name="forecast_results.csv",
-        mime="text/csv"
-    )
+    # Forecast Dataframe Display
+    st.subheader("🔮 Projected Load Values")
+    future_preview = forecast_future[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(7)
+    future_preview.columns = ["Date", "Predicted Demand (kWh)", "Lower Bound (Safety)", "Upper Bound (Peak)"]
+    st.dataframe(future_preview, use_container_width=True)
